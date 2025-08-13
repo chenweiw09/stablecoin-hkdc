@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantum Ledger Exchange</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;700&display=swap');
+
+        :root {
+            --primary-color: #007bff;
+            --accent-color: #00d4ff;
+            --success-color: #28a745;
+            --danger-color: #ff4d4d;
+            --bg-color-dark: #0d1117;
+            --bg-color-light: #161b22;
+            --card-bg-color: #1c2128;
+            --text-color-primary: #c9d1d9;
+            --text-color-secondary: #8b949e;
+            --border-color: #30363d;
+            --glow-color: rgba(0, 123, 255, 0.5);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-color-dark);
+            color: var(--text-color-primary);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 1rem;
+            background-image: radial-gradient(var(--bg-color-light) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 420px;
+            background-color: var(--card-bg-color);
+            border-radius: 16px;
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.5), 0 0 15px var(--glow-color);
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            transition: max-width 0.4s ease-in-out;
+        }
+
+        .page {
+            padding: 2.5rem;
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+            animation: slideIn 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .logo {
+            text-align: center;
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--accent-color);
+            margin-bottom: 0.5rem;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px var(--accent-color);
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: var(--text-color-primary);
+            font-weight: 300;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        label {
+            position: absolute;
+            top: 0.8rem;
+            left: 1rem;
+            color: var(--text-color-secondary);
+            pointer-events: none;
+            transition: all 0.2s ease-out;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            background-color: var(--bg-color-light);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-color-primary);
+            font-size: 1rem;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .input-field:focus, .input-field:not(:placeholder-shown) {
+            outline: none;
+            border-color: var(--primary-color);
+            padding-top: 1.4rem;
+            padding-bottom: 0.2rem;
+        }
+
+        .input-field:focus + label, .input-field:not(:placeholder-shown) + label {
+            top: 0.2rem;
+            left: 1rem;
+            font-size: 0.75rem;
+            color: var(--primary-color);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 0.9rem;
+            border: 1px solid var(--primary-color);
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            background: transparent;
+            color: var(--primary-color);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-color);
+            color: #fff;
+            box-shadow: 0 0 20px var(--glow-color);
+        }
+
+        .link {
+            color: var(--accent-color);
+            text-decoration: none;
+            cursor: pointer;
+            display: block;
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+        .link:hover { text-decoration: underline; }
+
+        .message {
+            padding: 1rem; border-radius: 8px; margin-bottom: 1rem;
+            text-align: center; font-weight: 500; display: none;
+        }
+        .message-error { background-color: rgba(255, 77, 77, 0.1); border: 1px solid var(--danger-color); color: var(--danger-color); }
+        .message-success { background-color: rgba(40, 167, 69, 0.1); border: 1px solid var(--success-color); color: var(--success-color); }
+
+        /* Dashboard & Other Pages */
+        #dashboard-header, #action-title, #history-title { text-align: left; font-weight: 500;}
+        .user-info { text-align: left; margin-top: -1.5rem; margin-bottom: 2rem; color: var(--text-color-secondary); }
+        .user-status { font-weight: bold; text-transform: uppercase; }
+
+        .balance-display {
+            background: linear-gradient(135deg, rgba(0, 123, 255, 0.1), rgba(0, 212, 255, 0.1));
+            padding: 2rem; border-radius: 12px; text-align: center; margin-bottom: 2rem;
+            border: 1px solid var(--border-color);
+        }
+        .balance-display .label { font-size: 1rem; color: var(--text-color-secondary); }
+        .balance-display .amount { font-size: 2.8rem; font-weight: 700; color: #fff; letter-spacing: 1px; }
+
+        .action-buttons { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+        .action-buttons .btn { font-size: 0.9rem; padding: 0.8rem 0.5rem; }
+        .btn-secondary { border-color: var(--secondary-color); color: var(--secondary-color); }
+        .btn-secondary:hover { background-color: var(--secondary-color); color: #fff; box-shadow: 0 0 20px rgba(108, 117, 125, 0.5); }
+
+        /* KYC Simulation */
+        .kyc-simulation { text-align: center; padding: 2rem 0; }
+        .progress-bar { width: 100%; height: 8px; background-color: var(--border-color); border-radius: 4px; overflow: hidden; margin: 1.5rem 0; }
+        .progress-bar-inner { width: 0; height: 100%; background-color: var(--accent-color); transition: width 3s cubic-bezier(0.25, 1, 0.5, 1); box-shadow: 0 0 10px var(--accent-color); }
+
+        /* History */
+        #history-page .container { max-width: 800px; }
+        .history-list { list-style: none; padding: 0; }
+        .history-item {
+            background-color: var(--bg-color-light); border: 1px solid var(--border-color); border-radius: 12px;
+            padding: 1.5rem; margin-bottom: 1rem;
+            display: flex; flex-direction: column;
+            gap: 1rem;
+            transition: background-color 0.3s;
+        }
+        .history-item:hover { background-color: var(--border-color); }
+
+        .history-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1rem;
+        }
+        .history-item-header .type { font-weight: 500; font-size: 1.2rem; color: var(--text-color-primary); }
+        .history-item-header .amount { font-size: 1.5rem; font-weight: 700; }
+        .history-item-header .amount.income { color: var(--success-color); }
+        .history-item-header .amount.outcome { color: var(--danger-color); }
+
+        .history-item-body {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            font-size: 0.9rem;
+            color: var(--text-color-secondary);
+        }
+        .history-item-body .detail-item { display: flex; flex-direction: column; }
+        .history-item-body .detail-item .label { font-weight: 300; opacity: 0.7; }
+        .history-item-body .detail-item .value { font-weight: 500; color: var(--text-color-primary); word-break: break-all; }
+
+        .history-item-footer {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            opacity: 0.7;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+        }
+        /* 新增：银行卡列表和表单样式 */
+        .bank-card-list { list-style: none; padding: 0; }
+        .bank-card-item {
+            background: linear-gradient(135deg, var(--primary-color), #3c1a8e);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            color: #fff;
+            position: relative;
+            overflow: hidden;
+        }
+        .bank-card-item::before {
+            content: 'HKDC';
+            position: absolute;
+            top: 1rem;
+            right: 1.5rem;
+            font-size: 1.2rem;
+            font-weight: 700;
+            opacity: 0.7;
+        }
+        .bank-card-item .bank-name { font-size: 1.2rem; font-weight: 500; margin-bottom: 1.5rem; }
+        .bank-card-item .card-number { font-size: 1.3rem; letter-spacing: 2px; font-family: 'Courier New', Courier, monospace; margin-bottom: 0.5rem; }
+        .bank-card-item .account-name { font-size: 0.9rem; text-transform: uppercase; }
+
+        .add-card-btn-container { text-align: center; margin-top: 2rem; }
+
+
+        .payment-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+
+        .payment-modal-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .payment-modal {
+            background-color: #fff;
+            color: #333;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 380px;
+            padding: 1.5rem;
+            transform: scale(0.9);
+            transition: transform 0.3s;
+        }
+
+        .payment-modal-overlay.visible .payment-modal {
+            transform: scale(1);
+        }
+
+        .payment-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .payment-modal-header .title {
+            font-size: 1.2rem;
+            font-weight: 500;
+        }
+
+        .payment-modal-header .close-btn {
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #aaa;
+        }
+
+        .payment-modal-body .amount-display {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .payment-modal-body .amount-display .symbol {
+            font-size: 1.5rem;
+            font-weight: 700;
+            vertical-align: middle;
+        }
+        .payment-modal-body .amount-display .value {
+            font-size: 3rem;
+            font-weight: 700;
+            vertical-align: middle;
+        }
+
+        .payment-form .form-group {
+            margin-bottom: 1.5rem;
+        }
+        .payment-form .input-field {
+            background-color: #f4f4f4;
+            border-color: #ddd;
+            color: #333;
+            text-align: center;
+            font-size: 1.5rem;
+            letter-spacing: 5px;
+        }
+        .payment-form .btn-pay {
+            background-color: #007bff;
+            color: #fff;
+            font-weight: 500;
+        }
+
+        /* 选择银行卡模态框样式 */
+        .selection-modal-card {
+            background-color: var(--bg-color-light);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+        }
+        .selection-modal-card.selected {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 10px var(--accent-color);
+        }
+        .selection-modal-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--primary-color);
+        }
+        .selection-modal-card .bank-name { font-weight: 500; }
+        .selection-modal-card .card-number { color: var(--text-color-secondary); margin-top: 0.25rem; }
+    </style>
+</head>
+<body>
+    <div class="payment-modal-overlay" id="alipay-modal">
+        <div class="payment-modal">
+            <div class="payment-modal-header">
+                <span class="title">向商家付款</span>
+                <span class="close-btn" onclick="closeAlipayModal()">&times;</span>
+            </div>
+            <div class="payment-modal-body">
+                <div class="amount-display">
+                    <span class="symbol">¥</span>
+                    <span class="value" id="alipay-amount-display">0.00</span>
+                </div>
+                <form id="alipay-payment-form">
+                    <div class="form-group">
+                        <label for="alipay-password">支付密码</label>
+                        <input type="password" id="alipay-password" class="input-field" maxlength="6" required placeholder="●●●●●●">
+                    </div>
+                    <button type="submit" class="btn btn-pay">确认支付</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="container" id="main-container">
+        <!-- Login Page -->
+        <div class="page active" id="login-page">
+            <div class="logo">QLX</div>
+            <h2>Quantum Ledger Exchange</h2>
+            <div id="login-message" class="message"></div>
+            <form id="login-form">
+                <div class="form-group">
+                    <input type="email" id="login-email" class="input-field" required placeholder=" ">
+                    <label for="login-email">邮箱地址</label>
+                </div>
+                <div class="form-group">
+                    <input type="password" id="login-password" class="input-field" required placeholder=" ">
+                    <label for="login-password">密码</label>
+                </div>
+                <button type="submit" class="btn btn-primary">登录</button>
+            </form>
+            <span class="link" onclick="showPage('register-page')">没有账户？立即注册</span>
+        </div>
+        <!-- Register Page -->
+        <div class="page" id="register-page">
+            <div class="logo">QLX</div>
+            <h2>创建您的安全账户</h2>
+            <div id="register-message" class="message"></div>
+            <form id="register-form">
+                <div class="form-group">
+                    <input type="email" id="register-email" class="input-field" required placeholder=" ">
+                    <label for="register-email">邮箱地址</label>
+                </div>
+                <div class="form-group">
+                    <input type="password" id="register-password" class="input-field" required pattern="^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$" title="密码必须至少8位，包含字母和数字" placeholder=" ">
+                    <label for="register-password">设置密码</label>
+                </div>
+                <button type="submit" class="btn btn-primary">注册</button>
+            </form>
+            <span class="link" onclick="showPage('login-page')">已有账户？立即登录</span>
+        </div>
+        <!-- KYC Page -->
+        <div class="page" id="kyc-page">
+            <h2 id="kyc-title">身份验证</h2>
+            <p style="text-align: center; margin-bottom: 1.5rem; color: var(--text-color-secondary);">为保障资产安全，请完成身份验证。</p>
+            <div id="kyc-message" class="message"></div>
+            <div id="kyc-content">
+                <form id="kyc-form">
+                    <div class="form-group">
+                        <input type="text" id="kyc-name" class="input-field" required placeholder=" ">
+                        <label for="kyc-name">真实姓名</label>
+                    </div>
+                    <div class="form-group">
+                        <input type="text" id="kyc-id-card" class="input-field" required placeholder=" ">
+                        <label for="kyc-id-card">身份证号</label>
+                    </div>
+                    <button type="submit" class="btn btn-primary">提交并进行活体检测</button>
+                </form>
+            </div>
+            <span class="link" onclick="logout()">稍后验证</span>
+        </div>
+        <!-- Dashboard Page -->
+        <div class="page" id="dashboard-page">
+            <h2 id="dashboard-header">欢迎, <span id="user-name">访客</span></h2>
+            <div class="user-info"><span id="user-email"></span> | 状态: <span id="user-status" class="user-status"></span>
+            <span id="my-cards-link-container" style="display:none;"> | <a href="#" class="link" style="display:inline;" onclick="showBankCardsPage()">我的银行卡</a></span>
+            </div>
+            <div class="balance-display">
+                <div class="label">HKDC 余额</div>
+                <div class="amount" id="user-balance">0.00</div>
+            </div>
+            <div class="action-buttons">
+                <button class="btn btn-primary" onclick="showActionPage('deposit')">充值</button>
+                <button class="btn btn-primary" onclick="showActionPage('transfer')">转账</button>
+                <button class="btn btn-primary" onclick="showActionPage('withdraw')">提现</button>
+                <button class="btn btn-secondary" onclick="showHistoryPage()">交易历史</button>
+            </div>
+            <span class="link" onclick="logout()">退出登录</span>
+        </div>
+        <!-- Dynamic Action Page -->
+        <div class="page" id="action-page">
+             <h2 id="action-title"></h2>
+             <div id="action-message" class="message"></div>
+             <div id="action-content"></div>
+             <span class="link" onclick="checkUserStatusAndNavigate()">返回主页</span>
+        </div>
+        <!-- History Page -->
+        <div class="page" id="history-page">
+            <h2 id="history-title">交易历史</h2>
+            <div id="history-list-container"><p>正在加载...</p></div>
+            <span class="link" onclick="checkUserStatusAndNavigate()">返回主页</span>
+        </div>
+        <!-- 新增：银行卡管理页面 -->
+        <div class="page" id="bank-cards-page">
+            <h2 id="bank-cards-title">我的银行卡</h2>
+            <div id="bank-cards-list-container"><p>正在加载...</p></div>
+            <div class="add-card-btn-container">
+                 <button class="btn btn-primary" onclick="showAddCardForm()">添加新银行卡</button>
+            </div>
+            <span class="link" onclick="checkUserStatusAndNavigate()">返回主页</span>
+        </div>
+
+        <!-- 新增：添加银行卡表单页面 -->
+        <div class="page" id="add-card-page">
+            <h2>添加银行卡</h2>
+            <div id="add-card-message" class="message"></div>
+            <form id="add-card-form">
+                <div class="form-group">
+                    <input type="text" id="card-account-name" class="input-field" required placeholder=" ">
+                    <label for="card-account-name">银行账户名 (持卡人)</label>
+                </div>
+                <div class="form-group">
+                    <input type="text" id="card-bank-name" class="input-field" required placeholder=" ">
+                    <label for="card-bank-name">银行名称</label>
+                </div>
+                <div class="form-group">
+                    <input type="text" id="card-number" class="input-field" required placeholder=" ">
+                    <label for="card-number">银行卡号</label>
+                </div>
+                <button type="submit" class="btn btn-primary">确认添加</button>
+            </form>
+            <span class="link" onclick="showBankCardsPage()">取消</span>
+        </div>
+    </div>
+    <div class="payment-modal-overlay" id="withdraw-bank-modal">
+        <div class="payment-modal">
+            <div class="payment-modal-header">
+                <span class="title">提现到银行卡</span>
+                <span class="close-btn" onclick="closeWithdrawModal()">&times;</span>
+            </div>
+            <div class="payment-modal-body">
+                <form id="withdraw-bank-form">
+                    <div class="form-group">
+                        <label>请选择提现的银行卡</label>
+                        <div id="bank-card-selection-list">
+                            <!-- 银行卡列表将动态插入这里 -->
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="withdraw-bank-amount">提现金额</label>
+                        <input type="number" id="withdraw-bank-amount" class="input-field" step="0.01" required placeholder="0.00">
+                    </div>
+                    <button type="submit" class="btn btn-pay">确认提现</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = '';
+        let authToken = localStorage.getItem('authToken');
+        let currentUserId = null;
+
+        // --- 页面导航和消息显示 (辅助函数) ---
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+            const container = document.getElementById('main-container');
+            const isWidePage = pageId === 'history-page' || pageId === 'bank-cards-page';
+            container.style.maxWidth = isWidePage ? '800px' : '420px';
+        }
+
+        function showMessage(elementId, text, type = 'error') {
+            const el = document.getElementById(elementId);
+            if (!el || !text) return;
+            el.textContent = text;
+            el.className = `message message-${type}`;
+            el.style.display = 'block';
+            setTimeout(() => { if(el) el.style.display = 'none' }, 5000);
+        }
+
+        /**
+         * 将后端的英文状态翻译成用户友好的中文
+         * @param {string} status - 后端返回的状态字符串
+         * @returns {{text: string, color: string}} - 包含中文文本和对应颜色的对象
+         */
+        function translateUserStatus(status) {
+            switch (status) {
+                case 'active':
+                    return { text: '已认证', color: 'var(--success-color)' };
+                case 'unverified':
+                    return { text: '未认证', color: 'var(--warning-color)' };
+                case 'pending_kyc':
+                    return { text: 'KYC审核中', color: 'var(--primary-color)' };
+                case 'suspended':
+                     return { text: '已冻结', color: 'var(--danger-color)' };
+                default:
+                    return { text: status ? status.toUpperCase() : '未知', color: 'var(--text-color-secondary)' };
+            }
+        }
+
+        // --- API 请求 (辅助函数) ---
+        async function apiFetch(endpoint, options = {}) {
+            options.headers = { 'Content-Type': 'application/json', ...options.headers };
+            if (authToken) options.headers['Authorization'] = `Bearer ${authToken}`;
+            const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.detail || '发生未知错误');
+            return data;
+        }
+
+        // --- 认证流程 ---
+        document.getElementById('login-form').addEventListener('submit', async e => {
+            e.preventDefault();
+            const formData = new URLSearchParams();
+            formData.append('username', document.getElementById('login-email').value);
+            formData.append('password', document.getElementById('login-password').value);
+            try {
+                const result = await (await fetch(`${API_BASE_URL}/token`, { method: 'POST', body: formData })).json();
+                if (result.detail) throw new Error(result.detail);
+                authToken = result.access_token;
+                localStorage.setItem('authToken', authToken);
+                await checkUserStatusAndNavigate();
+            } catch (error) { showMessage('login-message', error.message); }
+        });
+
+        document.getElementById('register-form').addEventListener('submit', async e => {
+            e.preventDefault();
+            const payload = {
+                email: document.getElementById('register-email').value,
+                password: document.getElementById('register-password').value,
+            };
+            try {
+                await apiFetch('/register', { method: 'POST', body: JSON.stringify(payload) });
+                showMessage('register-message', '注册成功！请登录以继续。', 'success');
+                setTimeout(() => showPage('login-page'), 2000);
+            } catch (error) { showMessage('register-message', error.message); }
+        });
+
+        function logout() {
+            authToken = null; currentUserId = null;
+            localStorage.removeItem('authToken');
+            showPage('login-page');
+        }
+
+        // --- 导航与仪表盘 ---
+        async function checkUserStatusAndNavigate() {
+             try {
+                const data = await apiFetch('/users/me');
+                if (data.user.status !== 'active') {
+                    showPage('kyc-page');
+                } else {
+                    loadDashboard(data);
+                }
+            } catch (error) { logout(); }
+        }
+
+        function loadDashboard(data) {
+            currentUserId = data.user.id;
+            document.getElementById('user-name').textContent = data.user.full_name;
+            document.getElementById('user-email').textContent = data.user.email;
+            document.getElementById('user-balance').textContent = parseFloat(data.account_balance).toFixed(2);
+
+            const userStatusEl = document.getElementById('user-status');
+            const translatedStatus = translateUserStatus(data.user.status);
+            userStatusEl.textContent = translatedStatus.text;
+            userStatusEl.style.color = translatedStatus.color;
+
+            const myCardsLinkContainer = document.getElementById('my-cards-link-container');
+            myCardsLinkContainer.style.display = data.user.status === 'active' ? 'inline' : 'none';
+
+            showPage('dashboard-page');
+        }
+
+        // --- KYC 流程 ---
+        document.getElementById('kyc-form').addEventListener('submit', async e => {
+            e.preventDefault();
+            const payload = {
+                full_name: document.getElementById('kyc-name').value,
+                identity_card_number: document.getElementById('kyc-id-card').value,
+            };
+            try {
+                await apiFetch('/users/me/kyc', { method: 'POST', body: JSON.stringify(payload) });
+                const kycContent = document.getElementById('kyc-content');
+                kycContent.innerHTML = `<div class="kyc-simulation"><p>KYC信息已提交，正在进行活体检测...</p><div class="progress-bar"><div class="progress-bar-inner" id="kyc-progress"></div></div></div>`;
+                setTimeout(() => { document.getElementById('kyc-progress').style.width = '100%'; }, 100);
+                setTimeout(() => {
+                    alert("账户激活成功！");
+                    checkUserStatusAndNavigate();
+                }, 3100);
+            } catch (error) { showMessage('kyc-message', error.message); }
+        });
+
+        // --- 支付宝支付模态框 ---
+        const alipayModal = document.getElementById('alipay-modal');
+        let alipayPayload = { amount: 0 };
+
+        function showAlipayModal(amount) {
+            document.getElementById('alipay-amount-display').textContent = parseFloat(amount).toFixed(2);
+            alipayPayload.amount = parseFloat(amount);
+            alipayModal.classList.add('visible');
+        }
+
+        function closeAlipayModal() {
+            alipayModal.classList.remove('visible');
+            document.getElementById('alipay-payment-form').reset();
+        }
+
+        document.getElementById('alipay-payment-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const password = document.getElementById('alipay-password').value;
+            if (password.length < 6) {
+                alert("请输入6位支付密码");
+                return;
+            }
+
+            closeAlipayModal();
+            showMessage('action-message', '支付处理中，请稍候...', 'success');
+
+            try {
+                await apiFetch('/deposit/alipay/confirm', {
+                    method: 'POST',
+                    body: JSON.stringify({ amount: alipayPayload.amount })
+                });
+                showMessage('action-message', `充值 ${alipayPayload.amount} HKDC 成功！`, 'success');
+                setTimeout(() => { checkUserStatusAndNavigate(); }, 2000);
+            } catch (error) { showMessage('action-message', error.message, 'error'); }
+        });
+
+        // --- 核心功能 (充值, 转账, 提现) ---
+        const actionContent = document.getElementById('action-content');
+        const actionTitle = document.getElementById('action-title');
+
+        function showActionPage(type) {
+            const titles = {'deposit': '充值 HKDC', 'transfer': '内部转账', 'withdraw': '提现 HKDC'};
+            actionTitle.textContent = titles[type];
+            let content = '';
+            if (type === 'deposit') {
+                content = `<p style="text-align:center; color: var(--text-color-secondary); margin-bottom: 2rem;">选择您的充值方式</p><div class="action-buttons"><button class="btn btn-primary" onclick="handleDeposit('alipay')">支付宝充值</button><button class="btn btn-secondary" onclick="handleDeposit('web3')">Web3 钱包</button></div>`;
+            } else if (type === 'transfer') {
+                content = `<form id="transfer-form"><div class="form-group"><input type="email" id="transfer-recipient" class="input-field" required placeholder=" "><label>收款方账户 (账户ID)</label></div><div class="form-group"><input type="number" id="transfer-amount" class="input-field" step="0.01" required placeholder=" "><label>转账金额</label></div><button type="submit" class="btn btn-primary">确认转账</button></form>`;
+            } else if (type === 'withdraw') {
+                content = `<p style="text-align:center; color: var(--text-color-secondary); margin-bottom: 2rem;">选择您的提现方式</p><div class="action-buttons"><button class="btn btn-primary" onclick="handleWithdraw('bank')">提现到银行卡</button><button class="btn btn-secondary" onclick="handleWithdraw('web3')">提现到 Web3 钱包</button></div>`;
+            }
+            actionContent.innerHTML = content;
+            if (type === 'transfer') document.getElementById('transfer-form').addEventListener('submit', handleTransferSubmit);
+            showPage('action-page');
+        };
+
+        async function handleDeposit(type) {
+            if (type === 'alipay') {
+                try {
+                    const payeeInfo = await apiFetch('/deposit/alipay/info');
+                    const amount = prompt(`您将向以下支付宝账户充值:\n\n账户名: ${payeeInfo.account_name}\n账号: ${payeeInfo.account_id}\n\n请输入充值金额 (元):`, "100");
+                    if (amount && !isNaN(amount) && amount > 0) {
+                        showAlipayModal(amount);
+                    } else if (amount) { alert("请输入有效的金额！"); }
+                } catch (error) { showMessage('action-message', error.message); }
+            } else if (type === 'web3') {
+                 try {
+                    const data = await apiFetch('/deposit/web3/address');
+                    const amount = prompt(`请向以下地址转入HKDC:\n${data.deposit_address}\n\n转账完成后，在此输入您转入的金额并确认:`, "100");
+                     if (amount && !isNaN(amount) && amount > 0) {
+                         await apiFetch('/deposit/web3/confirm', {method: 'POST', body: JSON.stringify({amount: parseFloat(amount)})});
+                         showMessage('action-message', 'Web3充值已确认!', 'success');
+                         loadDashboard();
+                     }
+                } catch (error) { showMessage('action-message', error.message); }
+            }
+        }
+
+        async function handleTransferSubmit(e) {
+            e.preventDefault();
+            const recipientEmail = document.getElementById('transfer-recipient').value;
+            const amount = parseFloat(document.getElementById('transfer-amount').value);
+
+            if (!recipientEmail || amount <= 0) {
+                showMessage('action-message', '请输入有效的收款方邮箱和转账金额。');
+                return;
+            }
+
+            const confirmation = confirm(`您确定要向账户 ${recipientEmail} 转账 ${amount.toFixed(2)} HKDC 吗？`);
+            if (!confirmation) return;
+
+            const payload = { recipient_email: recipientEmail, amount: amount };
+
+            try {
+                await apiFetch('/transfer', { method: 'POST', body: JSON.stringify(payload) });
+                showMessage('action-message', '转账成功!', 'success');
+                setTimeout(() => { checkUserStatusAndNavigate(); }, 1500);
+            } catch (error) {
+                let userFriendlyMessage = '转账失败，请稍后再试。';
+                if (error.message.includes("Recipient account does not exist")) userFriendlyMessage = '转账失败：收款方账户不存在。';
+                else if (error.message.includes("Recipient account is at risk")) userFriendlyMessage = '转账失败：收款方账户有风险（未完成认证）。';
+                else if (error.message.includes("Insufficient balance")) userFriendlyMessage = '转账失败：您的余额不足。';
+                else if (error.message.includes("Cannot transfer to yourself")) userFriendlyMessage = '操作无效：不能给自己转账。';
+                showMessage('action-message', userFriendlyMessage, 'error');
+            }
+        }
+
+        // --- 提现模态框 ---
+        const withdrawBankModal = document.getElementById('withdraw-bank-modal');
+        let selectedBankAccountId = null;
+
+        function closeWithdrawModal() {
+            withdrawBankModal.classList.remove('visible');
+            document.getElementById('withdraw-bank-form').reset();
+            selectedBankAccountId = null;
+        }
+
+        async function showWithdrawModal() {
+            try {
+                const bankAccounts = await apiFetch('/users/me/bank-accounts');
+                const selectionList = document.getElementById('bank-card-selection-list');
+
+                if (bankAccounts.length === 0) {
+                    alert("您尚未绑定任何银行卡。请先在“我的银行卡”页面添加。");
+                    return;
+                }
+
+                let cardsHtml = '';
+                bankAccounts.forEach(card => {
+                    const formattedCardNumber = `**** **** **** ${card.card_number.slice(-4)}`;
+                    cardsHtml += `<div class="selection-modal-card" data-card-id="${card.id}" onclick="selectCard(this)"><div class="bank-name">${card.bank_name}</div><div class="card-number">${formattedCardNumber}</div></div>`;
+                });
+                selectionList.innerHTML = cardsHtml;
+                withdrawBankModal.classList.add('visible');
+            } catch (error) { showMessage('action-message', `加载银行卡失败: ${error.message}`, 'error'); }
+        }
+
+        function selectCard(cardElement) {
+            document.querySelectorAll('.selection-modal-card').forEach(el => el.classList.remove('selected'));
+            cardElement.classList.add('selected');
+            selectedBankAccountId = parseInt(cardElement.dataset.cardId);
+        }
+
+        document.getElementById('withdraw-bank-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const amount = parseFloat(document.getElementById('withdraw-bank-amount').value);
+
+            if (!selectedBankAccountId) { alert("请选择一张银行卡！"); return; }
+            if (!amount || amount <= 0) { alert("请输入有效的提现金额！"); return; }
+
+            const payload = { bank_account_id: selectedBankAccountId, amount: amount };
+
+            try {
+                await apiFetch('/withdraw/bank', { method: 'POST', body: JSON.stringify(payload) });
+                closeWithdrawModal();
+                showMessage('action-message', `提现 ${amount.toFixed(2)} HKDC 的申请已成功提交！`, 'success');
+                setTimeout(() => { checkUserStatusAndNavigate(); }, 2000);
+            } catch (error) { alert(`提现失败: ${error.message}`); }
+        });
+
+        async function handleWithdraw(type) {
+            if (type === 'bank') {
+                await showWithdrawModal();
+            } else if (type === 'web3') {
+                const address = prompt("请输入您接收HKDC的Web3钱包地址 (0x...):");
+                const amount = prompt("请输入提现金额:", "50");
+                if (address && address.startsWith('0x') && amount && !isNaN(amount) && amount > 0) {
+                    try {
+                        const result = await apiFetch('/withdraw/web3', { method: 'POST', body: JSON.stringify({ recipient_web3_address: address, amount: parseFloat(amount) }) });
+                        showMessage('action-message', `Web3提现成功! 交易哈希: ${result.tx_hash.substring(0,20)}...`, 'success');
+                        setTimeout(() => { checkUserStatusAndNavigate(); }, 1500);
+                    } catch (error) { showMessage('action-message', error.message); }
+                } else if (address || amount) {
+                    alert("请输入有效的Web3地址和金额。");
+                }
+            }
+        }
+
+        // --- 银行卡管理 ---
+        async function showBankCardsPage() {
+            showPage('bank-cards-page');
+            const container = document.getElementById('bank-cards-list-container');
+            container.innerHTML = '<p style="text-align:center;">正在加载银行卡列表...</p>';
+            try {
+                const bankAccounts = await apiFetch('/users/me/bank-accounts');
+                if (bankAccounts.length === 0) {
+                    container.innerHTML = '<p style="text-align:center; color: var(--text-color-secondary);">您尚未绑定任何银行卡。</p>';
+                    return;
+                }
+                let cardsHtml = '<ul class="bank-card-list">';
+                bankAccounts.forEach(card => {
+                    const formattedCardNumber = card.card_number.replace(/\s/g, '').replace(/(\d{4})/g, '$1 ').trim();
+                    cardsHtml += `<li class="bank-card-item"><div class="bank-name">${card.bank_name}</div><div class="card-number">${formattedCardNumber}</div><div class="account-name">${card.account_name}</div></li>`;
+                });
+                container.innerHTML = cardsHtml + '</ul>';
+            } catch (error) { container.innerHTML = `<p style="color: var(--danger-color); text-align:center;">加载失败: ${error.message}</p>`; }
+        }
+
+        function showAddCardForm() {
+            showPage('add-card-page');
+            document.getElementById('add-card-message').style.display = 'none';
+            document.getElementById('add-card-form').reset();
+        }
+
+        document.getElementById('add-card-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const payload = {
+                account_name: document.getElementById('card-account-name').value,
+                bank_name: document.getElementById('card-bank-name').value,
+                card_number: document.getElementById('card-number').value,
+            };
+            try {
+                await apiFetch('/users/me/bank-accounts', { method: 'POST', body: JSON.stringify(payload) });
+                showMessage('add-card-message', '银行卡添加成功!', 'success');
+                setTimeout(() => { showBankCardsPage(); }, 1500);
+            } catch (error) { showMessage('add-card-message', error.message, 'error'); }
+        });
+
+        // --- 交易历史 ---
+        async function showHistoryPage() {
+            showPage('history-page');
+            const container = document.getElementById('history-list-container');
+            container.innerHTML = '<p style="text-align:center;">正在加载交易历史...</p>';
+
+            try {
+                // 后端现在返回的是包含嵌套信息的丰富数据
+                const transactions = await apiFetch('/transactions/history');
+                if (transactions.length === 0) {
+                    container.innerHTML = '<p style="text-align:center; color: var(--text-color-secondary);">暂无交易记录。</p>';
+                    return;
+                }
+
+                let historyHtml = '<ul class="history-list">';
+                transactions.forEach(tx => {
+                    const isIncome = (tx.type.includes('deposit') || (tx.type === 'internal_transfer' && tx.recipient && tx.recipient.id === currentUserId));
+                    const amountClass = isIncome ? 'income' : 'outcome';
+                    const amountSign = isIncome ? '+' : '-';
+
+                    let typeText = tx.type;
+                    let detailsHtml = '';
+
+                    // --- 构建交易详情 ---
+                    let initiatorAccount = tx.initiator.full_name || tx.initiator.email;
+
+                    switch (tx.type) {
+                        case 'deposit_alipay':
+                            typeText = '支付宝充值';
+                            detailsHtml = `
+                                <div class="detail-item">
+                                    <span class="label">充值账户</span>
+                                    <span class="value">${initiatorAccount}</span>
+                                </div>`;
+                            break;
+                        case 'deposit_web3':
+                            typeText = 'Web3 钱包充值';
+                             detailsHtml = `
+                                <div class="detail-item">
+                                    <span class="label">目标账户</span>
+                                    <span class="value">${initiatorAccount}</span>
+                                </div>`;
+                            break;
+                        case 'internal_transfer':
+                            if (isIncome) {
+                                typeText = '收到转账';
+                                detailsHtml = `
+                                    <div class="detail-item">
+                                        <span class="label">付款方</span>
+                                        <span class="value">${initiatorAccount}</span>
+                                    </div>`;
+                            } else {
+                                typeText = '发起转账';
+                                detailsHtml = `
+                                    <div class="detail-item">
+                                        <span class="label">收款方</span>
+                                        <span class="value">${tx.recipient ? (tx.recipient.full_name || tx.recipient.email) : 'N/A'}</span>
+                                    </div>`;
+                            }
+                            break;
+                        case 'withdraw_bank':
+                            typeText = '提现到银行卡';
+                            detailsHtml = `
+                                <div class="detail-item">
+                                    <span class="label">提现账户</span>
+                                    <span class="value">${initiatorAccount}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="label">收款银行卡</span>
+                                    <span class="value">${tx.bank_account ? `${tx.bank_account.bank_name} (${tx.bank_account.card_number})` : 'N/A'}</span>
+                                </div>`;
+                            break;
+                        case 'withdraw_web3':
+                            typeText = '提现到 Web3 钱包';
+                            detailsHtml = `
+                                 <div class="detail-item">
+                                    <span class="label">提现账户</span>
+                                    <span class="value">${initiatorAccount}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="label">收款 Web3 地址</span>
+                                    <span class="value">${tx.recipient_web3_address || 'N/A'}</span>
+                                </div>
+                                <div class="detail-item" style="grid-column: span 2;">
+                                    <span class="label">区块 HASH</span>
+                                    <span class="value">${tx.tx_hash || 'N/A'}</span>
+                                </div>`;
+                            break;
+                    }
+
+                    // --- 构建时间戳 ---
+                    const startTime = new Date(tx.created_at).toLocaleString();
+                    const endTime = tx.completed_at ? new Date(tx.completed_at).toLocaleString() : '处理中...';
+
+                    // --- 组合成最终的 HTML ---
+                    historyHtml += `
+                        <li class="history-item">
+                            <div class="history-item-header">
+                                <span class="type">${typeText}</span>
+                                <span class="amount ${amountClass}">${amountSign} ${tx.amount.toFixed(2)} HKDC</span>
+                            </div>
+                            <div class="history-item-body">
+                                ${detailsHtml}
+                            </div>
+                            <div class="history-item-footer">
+                                <span>发起时间: ${startTime}</span>
+                                <span>完成时间: ${endTime}</span>
+                            </div>
+                        </li>
+                    `;
+                });
+                historyHtml += '</ul>';
+                container.innerHTML = historyHtml;
+
+            } catch (error) {
+                container.innerHTML = `<p style="color: var(--danger-color); text-align: center;">加载历史记录失败: ${error.message}</p>`;
+            }
+        }
+
+        // --- 页面初始加载 ---
+        document.addEventListener('DOMContentLoaded', () => {
+            authToken = localStorage.getItem('authToken');
+            if (authToken) {
+                checkUserStatusAndNavigate();
+            } else {
+                showPage('login-page');
+            }
+        });
+    </script>
+</body>
+</html>
