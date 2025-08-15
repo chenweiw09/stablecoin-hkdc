@@ -26,6 +26,7 @@ contract HKDC is IERC20, Ownable {
 
     bool public whitelistEnabled;
     mapping(address => bool) private _whitelist;
+    address[] private _whitelistArray;
 
     event WhitelistEnabled(bool enabled);
     event AddedToWhitelist(address indexed account);
@@ -94,6 +95,7 @@ contract HKDC is IERC20, Ownable {
         require(account != address(0), "HKDC: zero address");
         if (!_whitelist[account]) {
             _whitelist[account] = true;
+            _whitelistArray.push(account);
             emit AddedToWhitelist(account);
         }
     }
@@ -101,6 +103,13 @@ contract HKDC is IERC20, Ownable {
     function removeFromWhitelist(address account) external onlyOwner {
         if (_whitelist[account]) {
             _whitelist[account] = false;
+            for (uint i = 0; i < _whitelistArray.length; i++) {
+                if (_whitelistArray[i] == account) {
+                    _whitelistArray[i] = _whitelistArray[_whitelistArray.length - 1];
+                    _whitelistArray.pop();
+                    break;
+                }
+            }
             emit RemovedFromWhitelist(account);
         }
     }
@@ -112,6 +121,7 @@ contract HKDC is IERC20, Ownable {
             address a = toAdd[i];
             if (a != address(0) && !_whitelist[a]) {
                 _whitelist[a] = true;
+                _whitelistArray.push(a);
                 added++;
             }
         }
@@ -119,10 +129,21 @@ contract HKDC is IERC20, Ownable {
             address a = toRemove[i];
             if (_whitelist[a]) {
                 _whitelist[a] = false;
+                for (uint j = 0; j < _whitelistArray.length; j++) {
+                    if (_whitelistArray[j] == a) {
+                        _whitelistArray[j] = _whitelistArray[_whitelistArray.length - 1];
+                        _whitelistArray.pop();
+                        break;
+                    }
+                }
                 removed++;
             }
         }
         emit BatchWhitelistUpdated(added, removed);
+    }
+
+    function getwhitelist() external view returns(address[] memory) {
+        return _whitelistArray;
     }
 
     // -------- 内部核心逻辑 --------
